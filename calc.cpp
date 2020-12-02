@@ -44,9 +44,9 @@ extern "C" void calc_destroy(struct Calc *calc) {
 // Store the result in a pointer to result
 extern "C" int calc_eval(struct Calc *calc, const char *expr, int *result) {
   CalcImpl *obj = static_cast<CalcImpl *>(calc);
-//  pthread_mutex_lock(&obj->lock);
+  pthread_mutex_lock(&obj->lock);
   int out = obj->evalExpr(expr, *result);
-//  pthread_mutex_unlock(&obj->lock);
+  pthread_mutex_unlock(&obj->lock);
   return out;
 }
 
