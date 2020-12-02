@@ -7,6 +7,8 @@
 #include <map>
 #include <stdlib.h>
 #include <algorithm>
+#include <pthread.h>
+
 using std::stringstream;
 using std::vector; using std::map;
 using std::string;
@@ -16,6 +18,7 @@ struct Calc {
 class CalcImpl : public Calc {
   public:
     map<string, int> vars;
+    pthread_mutex_t lock;
     // Member Functions
     int evalExpr(const char *expr, int &result);
     int parsed_eval(vector<string> &expr, bool &error);
@@ -25,12 +28,15 @@ class CalcImpl : public Calc {
 
 // constructor for calculator object
 extern "C" struct Calc *calc_create(void) {
-  return new CalcImpl();
+  CalcImpl *obj = new CalcImpl();
+  pthread_mutex_init(&obj->lock, NULL);
+  return obj;
 }
 
 // Destructor for calculator object
 extern "C" void calc_destroy(struct Calc *calc) {
   CalcImpl *obj = static_cast<CalcImpl *>(calc);
+  pthread_mutex_destroy(&obj->lock);
   delete obj;
 }
 
@@ -38,7 +44,10 @@ extern "C" void calc_destroy(struct Calc *calc) {
 // Store the result in a pointer to result
 extern "C" int calc_eval(struct Calc *calc, const char *expr, int *result) {
   CalcImpl *obj = static_cast<CalcImpl *>(calc);
-  return obj->evalExpr(expr, *result);
+//  pthread_mutex_lock(&obj->lock);
+  int out = obj->evalExpr(expr, *result);
+//  pthread_mutex_unlock(&obj->lock);
+  return out;
 }
 
 // Split an expression into tokens
